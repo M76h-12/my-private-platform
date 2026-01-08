@@ -2,37 +2,114 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord | Secure Access</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Discord Platform - Professional Edition</title>
     <style>
-        body { background: #36393f; font-family: 'Whitney', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; overflow: hidden; }
-        .container { background: #2f3136; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); text-align: center; }
-        h2 { margin: 0 0 8px; font-size: 24px; }
-        p { color: #b9bbbe; margin-bottom: 20px; }
-        label { display: block; color: #b9bbbe; font-size: 12px; font-weight: bold; margin: 10px 0 5px; text-align: right; text-transform: uppercase; }
-        input { width: 100%; padding: 10px; background: #202225; border: 1px solid #202225; border-radius: 3px; color: white; box-sizing: border-box; }
-        .btn { background: #5865f2; color: white; padding: 12px; border: none; border-radius: 3px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        .link { color: #00aff4; font-size: 14px; cursor: pointer; margin-top: 15px; display: block; }
-        #mainApp, #otpPage, #registerFields { display: none; }
+        body { background-color: #36393f; color: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* شريط السيرفرات الجانبي */
+        .guilds-sidebar { width: 72px; background-color: #202225; padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .guild-icon { width: 48px; height: 48px; background-color: #5865f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .guild-icon:hover { border-radius: 30%; background-color: #4752c4; }
+
+        /* قائمة القنوات */
+        .channels-sidebar { width: 240px; background-color: #2f3136; display: flex; flex-direction: column; }
+        .server-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .channel-list { padding: 10px; flex: 1; }
+        .channel-item { padding: 8px; border-radius: 4px; color: #8e9297; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .channel-item:hover { background-color: #393c43; color: white; }
+        .channel-item.active { background-color: #393c43; color: white; }
+
+        /* منطقة الدردشة */
+        .chat-container { flex: 1; display: flex; flex-direction: column; background-color: #36393f; }
+        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid #26272b; font-weight: bold; }
+        .messages-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { display: flex; gap: 15px; }
+        .avatar { width: 40px; height: 40px; background-color: #4f545c; border-radius: 50%; }
+        .msg-content { flex: 1; }
+        .user-name { font-weight: bold; font-size: 14px; margin-right: 5px; }
+        .timestamp { color: #72767d; font-size: 11px; margin-right: 8px; }
+
+        /* صندوق الإدخال */
+        .input-area { padding: 0 20px 24px; }
+        .input-wrapper { background-color: #40444b; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; }
+        input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 15px; }
+
+        /* لوحة الأدمن الحمراء (تظهر لك فقط) */
+        .admin-surveillance { background-color: #ed4245; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; border-top: 1px solid white; }
+        .btn-control { background: white; color: #ed4245; border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="authPage" class="container">
-        <h2 id="authTitle">مرحباً بعودتك!</h2>
-        <p id="authSubTitle">نحن سعداء برؤيتك مرة أخرى!</p>
-        
-        <label>البريد الإلكتروني</label>
-        <input type="email" id="email">
+    <div class="guilds-sidebar">
+        <div class="guild-icon">🌐</div>
+        <div style="width: 32px; height: 2px; background: #393c43;"></div>
+        <div class="guild-icon" style="background-color: #3ba55c;">+</div>
+    </div>
 
-        <div id="registerFields">
-            <label>اسم المستخدم</label>
-            <input type="text" id="username">
+    <div class="channels-sidebar">
+        <div class="server-header">سيرفر التحكم الخاص 👑</div>
+        <div class="channel-list">
+            <div class="channel-item active"># العامة</div>
+            <div class="channel-item"># ملفات-التجسس</div>
+            <div class="channel-item"># سجل-الأعضاء</div>
+            <div style="margin-top: 20px; color: #8e9297; font-size: 12px; font-weight: bold;">قنوات صوتية</div>
+            <div class="channel-item">🔊 غرفة الاجتماعات</div>
         </div>
-        
-        <label>كلمة المرور</label>
-        <input type="password" id="password">
-        
-        <button class="btn" id="mainBtn" onclick="handleAuth()">تسجيل الدخول</button>
-        <span class="link"
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header"># العامة</div>
+        <div class="messages-area" id="msgBox">
+            <div class="message">
+                <div class="avatar" style="background-color: #5865f2;"></div>
+                <div class="msg-content">
+                    <span class="user-name" style="color: #ed4245;">النظام</span>
+                    <span class="timestamp">اليوم الساعة 10:00 م</span>
+                    <div>مرحباً بك في المنصة. تم تفعيل نظام المراقبة بنجاح.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="chatInput" placeholder="أرسل رسالة إلى #العامة" onkeypress="sendMessage(event)">
+            </div>
+        </div>
+
+        <div class="admin-surveillance">
+            <span>🕵️ نظام المراقبة: نشط (3 أعضاء متصلين)</span>
+            <div>
+                <button class="btn-control" onclick="freeze()">تجميد الشات ❄️</button>
+                <button class="btn-control" onclick="spy()">بدء التجسس 👁️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage(e) {
+            if (e.key === "Enter") {
+                const val = document.getElementById('chatInput').value;
+                if (!val) return;
+                
+                const box = document.getElementById('msgBox');
+                box.innerHTML += `
+                    <div class="message">
+                        <div class="avatar"></div>
+                        <div class="msg-content">
+                            <span class="user-name" style="color: #3ba55c;">أنت (أدمن)</span>
+                            <span class="timestamp">الآن</span>
+                            <div>${val}</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('chatInput').value = "";
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        function freeze() { alert("تم قفل الشات عن جميع الأعضاء!"); }
+        function spy() { alert("جاري سحب شاشة الضحايا الآن..."); }
+    </script>
+</body>
+</html>
