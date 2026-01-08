@@ -2,126 +2,135 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Platform</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Discord</title>
     <style>
-        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --accent: #5865f2; --text: #dcddde; }
-        body { margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --accent: #5865f2; --text: #8e9297; }
+        body { margin: 0; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        /* شريط السيرفرات */
-        .servers { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; flex-shrink: 0; }
-        .server-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        /* شريط السيرفرات الجانبي */
+        .guilds { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; flex-shrink: 0; }
+        .guild-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .guild-icon:hover { border-radius: 30%; }
+        .add-server { background: #3ba55c; color: white; font-size: 25px; }
 
-        /* القنوات */
+        /* قائمة القنوات */
         .sidebar { width: 240px; background: var(--side); display: flex; flex-direction: column; flex-shrink: 0; }
-        .ch-item { padding: 8px 15px; margin: 2px 8px; border-radius: 4px; color: #8e9297; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .ch-item:hover, .ch-item.active { background: #393c43; color: white; }
-        .voice-connected { color: #3ba55c !important; font-weight: bold; }
+        .server-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b; display: flex; justify-content: space-between; }
+        .channel-category { margin-top: 20px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text); font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .channel-item { padding: 8px 10px; margin: 2px 8px; border-radius: 4px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .channel-item:hover, .channel-item.active { background: #393c43; color: white; }
+        .channel-item::before { content: '#'; font-size: 18px; color: #72767d; }
+        .voice-item::before { content: '🔊'; }
 
-        /* منطقة الدردشة */
-        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .msgs { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .input-area { padding: 20px; background: var(--bg); }
-        .input-box { background: #40444b; padding: 12px; border-radius: 8px; }
+        /* منطقة الدردشة الرئيسية */
+        .chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid #26272b; font-weight: bold; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .input-area { padding: 0 20px 24px; }
+        .input-box { background: #40444b; padding: 11px; border-radius: 8px; display: flex; align-items: center; }
         input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 15px; }
 
-        /* قائمة الأعضاء */
+        /* قائمة الأعضاء والخيارات السرية */
         .members { width: 240px; background: var(--side); padding: 20px; flex-shrink: 0; }
         .user-tag { color: #ed4245; font-weight: bold; cursor: pointer; position: relative; }
-        
-        /* القائمة السرية للأدمن */
         .admin-menu { 
-            display: none; position: absolute; bottom: 25px; right: 0; background: #18191c; 
-            padding: 8px; width: 160px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100;
+            display: none; position: absolute; bottom: 30px; right: 0; background: #18191c; 
+            padding: 8px; width: 170px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100;
         }
-        .menu-item { padding: 8px; font-size: 13px; color: #b9bbbe; cursor: pointer; text-align: right; }
+        .menu-item { padding: 10px; font-size: 13px; color: #b9bbbe; cursor: pointer; text-align: right; border-radius: 2px; }
         .menu-item:hover { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
-    <div class="servers">
-        <div class="server-icon">G</div>
+    <div class="guilds">
+        <div class="guild-icon">
+            <img src="https://assets-global.website-files.com/6257adef93467e0fa1b847f4/636e0a6a49f9a7b5c3017172_Discord-Logo-White.svg" width="28">
+        </div>
+        <div style="width: 32px; height: 2px; background: #4f545c; border-radius: 1px;"></div>
+        <div class="guild-icon add-server" onclick="alert('إنشاء سيرفر جديد...')">+</div>
     </div>
 
     <div class="sidebar">
-        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b;">سيرفر السيطرة 👑</div>
-        <div class="ch-item active"># general</div>
-        <div class="ch-item"># surveillance</div>
-        <div style="margin-top: 20px; font-size: 11px; font-weight: bold; padding: 0 15px; color: #8e9297; text-transform: uppercase;">قنوات صوتية</div>
-        <div class="ch-item" id="voiceBtn" onclick="joinVoice()">🔊 غرفة الصوت</div>
+        <div class="server-header">
+            <span>سيرفر السيطرة 👑</span>
+            <span style="cursor: pointer;">⌄</span>
+        </div>
+        
+        <div class="channel-category">
+            <span>قنوات نصية</span>
+            <span style="cursor: pointer; font-size: 18px;" onclick="alert('إضافة قناة نصية...')">+</span>
+        </div>
+        <div class="channel-item active" onclick="switchChannel('general')">general</div>
+        <div class="channel-item" onclick="switchChannel('surveillance')">surveillance</div>
+
+        <div class="channel-category">
+            <span>قنوات صوتية</span>
+            <span style="cursor: pointer; font-size: 18px;" onclick="alert('إضافة قناة صوتية...')">+</span>
+        </div>
+        <div class="channel-item voice-item" onclick="alert('جاري الاتصال بالقناة الصوتية...')">قناة صوتية</div>
     </div>
 
-    <div class="main">
-        <div class="msgs" id="chat">
-            <div style="color: #72767d;">[System]: تم تحميل الواجهة بنجاح. اكتب "1" للانتقال للخطوة التالية.</div>
+    <div class="chat-main">
+        <div class="chat-header" id="channelName"># general</div>
+        <div class="messages" id="chat">
+            <div style="color: #72767d;">مرحباً بك في بداية القناة.</div>
         </div>
         <div class="input-area">
             <div class="input-box">
-                <input type="text" id="msgInput" placeholder="تحدث في #general" onkeypress="handleChat(event)">
+                <input type="text" id="msgInput" placeholder="تحدث في القناة..." onkeypress="handleMsg(event)">
             </div>
         </div>
     </div>
 
     <div class="members">
-        <div style="font-size: 11px; color: #8e9297; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">متصل — 1</div>
+        <div style="font-size: 11px; color: var(--text); font-weight: bold; margin-bottom: 15px;">متصل — 1</div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div id="userAvatar" style="width: 32px; height: 32px; background: #5865f2; border-radius: 50%;"></div>
-            <div class="user-tag" onclick="toggleAdminMenu(event)">أنت
+            <div style="width: 32px; height: 32px; background: #5865f2; border-radius: 50%;"></div>
+            <div class="user-tag" onclick="toggleAdmin(event)">أنت
                 <div class="admin-menu" id="adminMenu">
-                    <div class="menu-item" onclick="adminCmd('📸 جاري سحب الشاشة...')">Screen Spy</div>
-                    <div class="menu-item" onclick="adminCmd('👻 وضع التخفي نشط')">Ghost Mode</div>
-                    <div class="menu-item" onclick="adminCmd('🚫 تم تجميد الأعضاء')">Freeze All</div>
+                    <div class="menu-item" onclick="cmd('📸 سحب لقطة شاشة...')">Screen Spy</div>
+                    <div class="menu-item" onclick="cmd('👻 وضع التخفي')">Ghost Mode</div>
+                    <div class="menu-item" onclick="cmd('🚫 حظر الجميع')">Ban All</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // الشات والتحكم
-        function handleChat(e) {
+        // تبديل القنوات الحقيقي
+        function switchChannel(name) {
+            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById('channelName').innerText = '# ' + name;
+            document.getElementById('chat').innerHTML = `<div style="color: #72767d;">لقد دخلت قناة #${name}</div>`;
+        }
+
+        // إرسال الرسائل
+        function handleMsg(e) {
             if(e.key === "Enter") {
                 const chat = document.getElementById('chat');
-                const val = e.target.value.trim();
-                if(!val) return;
-
-                chat.innerHTML += `<div><strong style="color:#ed4245">أنت:</strong> ${val}</div>`;
+                if(!e.target.value.trim()) return;
+                chat.innerHTML += `<div><strong style="color:#ed4245">أنت:</strong> ${e.target.value}</div>`;
                 e.target.value = "";
                 chat.scrollTop = chat.scrollHeight;
-
-                if(val === "1") {
-                    chat.innerHTML += `<div style="color: #3ba55c;">[System]: تم استلام الأمر. جاري تفعيل محرك الصوت...</div>`;
-                }
             }
         }
 
-        // تفعيل الصوت (WebRTC)
-        async function joinVoice() {
-            try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                document.getElementById('voiceBtn').classList.add('voice-connected');
-                document.getElementById('userAvatar').style.boxShadow = "0 0 12px #3ba55c";
-                document.getElementById('chat').innerHTML += `<div style="color: #3ba55c;">[Voice]: متصل الآن. الميكروفون يعمل.</div>`;
-            } catch (err) {
-                alert("يجب السماح بالوصول للميكروفون لعمل الصوت.");
-            }
-        }
-
-        // لوحة الأدمن السرية
-        function toggleAdminMenu(e) {
+        // لوحة الإدارة السرية
+        function toggleAdmin(e) {
             e.stopPropagation();
-            const menu = document.getElementById('adminMenu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            const m = document.getElementById('adminMenu');
+            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
         }
 
-        function adminCmd(msg) {
-            alert(msg);
-            document.getElementById('adminMenu').style.display = 'none';
-        }
-
-        // إغلاق القائمة عند الضغط خارجها
+        function cmd(s) { alert(s); document.getElementById('adminMenu').style.display = 'none'; }
         window.onclick = () => document.getElementById('adminMenu').style.display = 'none';
+
+        // تفعيل الخطوة القادمة تلقائياً (بدل كتابة 1)
+        window.onload = () => {
+            console.log("نظام السوبر أدمن مفعل. جاهز للمرحلة القادمة.");
+        };
     </script>
 </body>
 </html>
