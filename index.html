@@ -2,21 +2,126 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Clone - Private Access</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --text: #dcddde; --accent: #5865f2; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
-        .servers { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; }
-        .server-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
-        .channels { width: 240px; background: var(--side); display: flex; flex-direction: column; }
-        .ch-item { padding: 8px 15px; margin: 2px 8px; border-radius: 4px; color: #8e9297; cursor: pointer; }
+        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --accent: #5865f2; --text: #dcddde; }
+        body { margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* شريط السيرفرات */
+        .servers { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; flex-shrink: 0; }
+        .server-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* القنوات */
+        .sidebar { width: 240px; background: var(--side); display: flex; flex-direction: column; flex-shrink: 0; }
+        .ch-item { padding: 8px 15px; margin: 2px 8px; border-radius: 4px; color: #8e9297; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .ch-item:hover, .ch-item.active { background: #393c43; color: white; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        .voice-connected { color: #3ba55c !important; font-weight: bold; }
+
+        /* منطقة الدردشة */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .msgs { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .input-box { padding: 20px; }
-        .input-inner { background: #40444b; padding: 12px; border-radius: 8px; }
-        input { background: none; border: none; color: white; width: 100%; outline: none; }
-        .members { width: 240px; background: var(--side); padding: 20px; }
-        .user-tag { color: #ed4245;
+        .input-area { padding: 20px; background: var(--bg); }
+        .input-box { background: #40444b; padding: 12px; border-radius: 8px; }
+        input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 15px; }
+
+        /* قائمة الأعضاء */
+        .members { width: 240px; background: var(--side); padding: 20px; flex-shrink: 0; }
+        .user-tag { color: #ed4245; font-weight: bold; cursor: pointer; position: relative; }
+        
+        /* القائمة السرية للأدمن */
+        .admin-menu { 
+            display: none; position: absolute; bottom: 25px; right: 0; background: #18191c; 
+            padding: 8px; width: 160px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100;
+        }
+        .menu-item { padding: 8px; font-size: 13px; color: #b9bbbe; cursor: pointer; text-align: right; }
+        .menu-item:hover { background: var(--accent); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="servers">
+        <div class="server-icon">G</div>
+    </div>
+
+    <div class="sidebar">
+        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b;">سيرفر السيطرة 👑</div>
+        <div class="ch-item active"># general</div>
+        <div class="ch-item"># surveillance</div>
+        <div style="margin-top: 20px; font-size: 11px; font-weight: bold; padding: 0 15px; color: #8e9297; text-transform: uppercase;">قنوات صوتية</div>
+        <div class="ch-item" id="voiceBtn" onclick="joinVoice()">🔊 غرفة الصوت</div>
+    </div>
+
+    <div class="main">
+        <div class="msgs" id="chat">
+            <div style="color: #72767d;">[System]: تم تحميل الواجهة بنجاح. اكتب "1" للانتقال للخطوة التالية.</div>
+        </div>
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="msgInput" placeholder="تحدث في #general" onkeypress="handleChat(event)">
+            </div>
+        </div>
+    </div>
+
+    <div class="members">
+        <div style="font-size: 11px; color: #8e9297; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">متصل — 1</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="userAvatar" style="width: 32px; height: 32px; background: #5865f2; border-radius: 50%;"></div>
+            <div class="user-tag" onclick="toggleAdminMenu(event)">أنت
+                <div class="admin-menu" id="adminMenu">
+                    <div class="menu-item" onclick="adminCmd('📸 جاري سحب الشاشة...')">Screen Spy</div>
+                    <div class="menu-item" onclick="adminCmd('👻 وضع التخفي نشط')">Ghost Mode</div>
+                    <div class="menu-item" onclick="adminCmd('🚫 تم تجميد الأعضاء')">Freeze All</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // الشات والتحكم
+        function handleChat(e) {
+            if(e.key === "Enter") {
+                const chat = document.getElementById('chat');
+                const val = e.target.value.trim();
+                if(!val) return;
+
+                chat.innerHTML += `<div><strong style="color:#ed4245">أنت:</strong> ${val}</div>`;
+                e.target.value = "";
+                chat.scrollTop = chat.scrollHeight;
+
+                if(val === "1") {
+                    chat.innerHTML += `<div style="color: #3ba55c;">[System]: تم استلام الأمر. جاري تفعيل محرك الصوت...</div>`;
+                }
+            }
+        }
+
+        // تفعيل الصوت (WebRTC)
+        async function joinVoice() {
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                document.getElementById('voiceBtn').classList.add('voice-connected');
+                document.getElementById('userAvatar').style.boxShadow = "0 0 12px #3ba55c";
+                document.getElementById('chat').innerHTML += `<div style="color: #3ba55c;">[Voice]: متصل الآن. الميكروفون يعمل.</div>`;
+            } catch (err) {
+                alert("يجب السماح بالوصول للميكروفون لعمل الصوت.");
+            }
+        }
+
+        // لوحة الأدمن السرية
+        function toggleAdminMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('adminMenu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function adminCmd(msg) {
+            alert(msg);
+            document.getElementById('adminMenu').style.display = 'none';
+        }
+
+        // إغلاق القائمة عند الضغط خارجها
+        window.onclick = () => document.getElementById('adminMenu').style.display = 'none';
+    </script>
+</body>
+</html>
