@@ -2,135 +2,71 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Discord</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord - Ultimate Clone</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --accent: #5865f2; --text: #8e9297; }
-        body { margin: 0; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* شريط السيرفرات الجانبي */
-        .guilds { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; flex-shrink: 0; }
-        .guild-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .guild-icon:hover { border-radius: 30%; }
-        .add-server { background: #3ba55c; color: white; font-size: 25px; }
+        /* CSS Reset & Variables */
+        :root {
+            --bg-guilds: #1e1f22; --bg-sidebar: #2b2d31; --bg-chat: #313338;
+            --bg-members: #2b2d31; --text-normal: #dbdee1; --text-muted: #949ba4;
+            --accent: #5865f2; --success: #23a55a; --danger: #f23f43;
+        }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; font-family: 'GG Sans', 'Whitney', sans-serif; background: var(--bg-chat); color: white; display: flex; height: 100vh; overflow: hidden; }
 
-        /* قائمة القنوات */
-        .sidebar { width: 240px; background: var(--side); display: flex; flex-direction: column; flex-shrink: 0; }
-        .server-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b; display: flex; justify-content: space-between; }
-        .channel-category { margin-top: 20px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text); font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .channel-item { padding: 8px 10px; margin: 2px 8px; border-radius: 4px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .channel-item:hover, .channel-item.active { background: #393c43; color: white; }
-        .channel-item::before { content: '#'; font-size: 18px; color: #72767d; }
-        .voice-item::before { content: '🔊'; }
+        /* 1. Guilds Column (السيرفرات) */
+        .guilds-nav { width: 72px; background: var(--bg-guilds); padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+        .guild-btn { width: 48px; height: 48px; background: var(--bg-chat); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
+        .guild-btn:hover { border-radius: 30%; background: var(--accent); }
+        .guild-btn.active::before { content: ""; position: absolute; left: -12px; height: 40px; width: 4px; background: white; border-radius: 0 4px 4px 0; }
+        .guild-btn img { width: 28px; }
 
-        /* منطقة الدردشة الرئيسية */
-        .chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid #26272b; font-weight: bold; }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .input-area { padding: 0 20px 24px; }
-        .input-box { background: #40444b; padding: 11px; border-radius: 8px; display: flex; align-items: center; }
+        /* 2. Sidebar (القنوات) */
+        .sidebar { width: 240px; background: var(--bg-sidebar); display: flex; flex-direction: column; flex-shrink: 0; }
+        .server-name { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; box-shadow: 0 1px 0 rgba(0,0,0,0.2); cursor: pointer; }
+        .channel-container { flex: 1; overflow-y: auto; padding-top: 10px; }
+        .category { padding: 10px 8px 4px 16px; color: var(--text-muted); font-size: 12px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .channel-link { padding: 6px 8px; margin: 2px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-muted); transition: 0.1s; }
+        .channel-link:hover, .channel-link.active { background: #3f4147; color: white; }
+        .channel-link::before { content: "#"; font-size: 20px; color: #72767d; }
+        .voice::before { content: "🔊"; font-size: 16px; }
+
+        /* 3. Main Chat (الدردشة) */
+        .chat-view { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 0 rgba(0,0,0,0.2); font-weight: bold; }
+        .message-list { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg-row { display: flex; gap: 16px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+        .msg-content { display: flex; flex-direction: column; }
+        .msg-user { color: var(--danger); font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .msg-text { color: var(--text-normal); line-height: 1.4; }
+
+        /* 4. Input Area */
+        .input-wrap { padding: 0 16px 24px; }
+        .input-inner { background: #383a40; padding: 11px; border-radius: 8px; display: flex; align-items: center; gap: 12px; }
         input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 15px; }
 
-        /* قائمة الأعضاء والخيارات السرية */
-        .members { width: 240px; background: var(--side); padding: 20px; flex-shrink: 0; }
-        .user-tag { color: #ed4245; font-weight: bold; cursor: pointer; position: relative; }
-        .admin-menu { 
-            display: none; position: absolute; bottom: 30px; right: 0; background: #18191c; 
-            padding: 8px; width: 170px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100;
+        /* 5. Member List (الأعضاء) */
+        .member-list { width: 240px; background: var(--bg-members); padding: 20px 8px; flex-shrink: 0; }
+        .member-card { display: flex; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 4px; cursor: pointer; position: relative; }
+        .member-card:hover { background: #3f4147; }
+        .member-name { color: var(--danger); font-weight: 500; font-size: 14px; }
+        
+        /* Secret Admin Menu */
+        .secret-panel { 
+            display: none; position: absolute; background: #111214; border-radius: 4px; 
+            padding: 8px; width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); z-index: 999;
+            right: 10px; top: 50px;
         }
-        .menu-item { padding: 10px; font-size: 13px; color: #b9bbbe; cursor: pointer; text-align: right; border-radius: 2px; }
-        .menu-item:hover { background: var(--accent); color: white; }
+        .menu-btn { padding: 8px; border-radius: 2px; cursor: pointer; font-size: 13px; color: #b5bac1; text-align: right; transition: 0.1s; }
+        .menu-btn:hover { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
-    <div class="guilds">
-        <div class="guild-icon">
-            <img src="https://assets-global.website-files.com/6257adef93467e0fa1b847f4/636e0a6a49f9a7b5c3017172_Discord-Logo-White.svg" width="28">
+    <nav class="guilds-nav">
+        <div class="guild-btn active">
+            <img src="https://assets-global.website-files.com/6257adef93467e0fa1b847f4/636e0a6a49f9a7b5c3017172_Discord-Logo-White.svg">
         </div>
-        <div style="width: 32px; height: 2px; background: #4f545c; border-radius: 1px;"></div>
-        <div class="guild-icon add-server" onclick="alert('إنشاء سيرفر جديد...')">+</div>
-    </div>
-
-    <div class="sidebar">
-        <div class="server-header">
-            <span>سيرفر السيطرة 👑</span>
-            <span style="cursor: pointer;">⌄</span>
-        </div>
-        
-        <div class="channel-category">
-            <span>قنوات نصية</span>
-            <span style="cursor: pointer; font-size: 18px;" onclick="alert('إضافة قناة نصية...')">+</span>
-        </div>
-        <div class="channel-item active" onclick="switchChannel('general')">general</div>
-        <div class="channel-item" onclick="switchChannel('surveillance')">surveillance</div>
-
-        <div class="channel-category">
-            <span>قنوات صوتية</span>
-            <span style="cursor: pointer; font-size: 18px;" onclick="alert('إضافة قناة صوتية...')">+</span>
-        </div>
-        <div class="channel-item voice-item" onclick="alert('جاري الاتصال بالقناة الصوتية...')">قناة صوتية</div>
-    </div>
-
-    <div class="chat-main">
-        <div class="chat-header" id="channelName"># general</div>
-        <div class="messages" id="chat">
-            <div style="color: #72767d;">مرحباً بك في بداية القناة.</div>
-        </div>
-        <div class="input-area">
-            <div class="input-box">
-                <input type="text" id="msgInput" placeholder="تحدث في القناة..." onkeypress="handleMsg(event)">
-            </div>
-        </div>
-    </div>
-
-    <div class="members">
-        <div style="font-size: 11px; color: var(--text); font-weight: bold; margin-bottom: 15px;">متصل — 1</div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 32px; height: 32px; background: #5865f2; border-radius: 50%;"></div>
-            <div class="user-tag" onclick="toggleAdmin(event)">أنت
-                <div class="admin-menu" id="adminMenu">
-                    <div class="menu-item" onclick="cmd('📸 سحب لقطة شاشة...')">Screen Spy</div>
-                    <div class="menu-item" onclick="cmd('👻 وضع التخفي')">Ghost Mode</div>
-                    <div class="menu-item" onclick="cmd('🚫 حظر الجميع')">Ban All</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // تبديل القنوات الحقيقي
-        function switchChannel(name) {
-            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            document.getElementById('channelName').innerText = '# ' + name;
-            document.getElementById('chat').innerHTML = `<div style="color: #72767d;">لقد دخلت قناة #${name}</div>`;
-        }
-
-        // إرسال الرسائل
-        function handleMsg(e) {
-            if(e.key === "Enter") {
-                const chat = document.getElementById('chat');
-                if(!e.target.value.trim()) return;
-                chat.innerHTML += `<div><strong style="color:#ed4245">أنت:</strong> ${e.target.value}</div>`;
-                e.target.value = "";
-                chat.scrollTop = chat.scrollHeight;
-            }
-        }
-
-        // لوحة الإدارة السرية
-        function toggleAdmin(e) {
-            e.stopPropagation();
-            const m = document.getElementById('adminMenu');
-            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function cmd(s) { alert(s); document.getElementById('adminMenu').style.display = 'none'; }
-        window.onclick = () => document.getElementById('adminMenu').style.display = 'none';
-
-        // تفعيل الخطوة القادمة تلقائياً (بدل كتابة 1)
-        window.onload = () => {
-            console.log("نظام السوبر أدمن مفعل. جاهز للمرحلة القادمة.");
-        };
-    </script>
-</body>
-</html>
+        <div style="height: 2px; width: 32px; background: #35363c; margin
