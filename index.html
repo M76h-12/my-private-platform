@@ -1,13 +1,24 @@
-<script>
-    function activateSpy() {
-        alert("🕵️ جاري سحب بيانات الـ IP والموقع الجغرافي لجميع المتصلين...");
-        document.getElementById('chatBox').innerHTML += `<p style="color: #ed4245;">[SYSTEM]: جاري استخراج البيانات... تم تحديد 3 أهداف نشطة.</p>`;
-    }
+<div id="loginPage" style="background:#36393f; height:100vh; display:flex; justify-content:center; align-items:center; position:fixed; width:100%; z-index:999;">
+    <div style="background:#2f3136; padding:40px; border-radius:8px; width:400px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.2);">
+        <h2 style="color:white; margin-bottom:10px;">مرحباً بعودتك!</h2>
+        <p style="color:#b9bbbe; margin-bottom:20px;">نحن سعداء جداً برؤيتك مرة أخرى!</p>
+        <input type="email" id="emailInput" placeholder="البريد الإلكتروني" style="width:100%; padding:10px; margin-bottom:20px; border-radius:3px; border:none; background:#202225; color:white;">
+        <button onclick="checkAuth()" style="width:100%; padding:10px; background:#5865f2; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:bold;">تسجيل الدخول</button>
+    </div>
+</div>
 
-    function freezeChat() {
-        let input = document.getElementById('userInput');
-        input.disabled = true;
-        input.placeholder = "⚠️ تم تجميد الشات بواسطة الأدمن";
-        alert("❄️ تم قفل الكتابة لجميع المستخدمين بنجاح.");
+<script>
+function checkAuth() {
+    let email = document.getElementById('emailInput').value;
+    if (email) {
+        // إخفاء صفحة الدخول وإظهار الواجهة
+        document.getElementById('loginPage').style.display = 'none';
+        
+        // التحقق من صلاحيات السوبر أدمن
+        if (email === "3mohmm9d76@gmail.com" || email === "4mohamm8d76@gmail.com") {
+            document.getElementById('adminPanel').style.display = "block";
+            alert("✅ تم الدخول كـ سوبر أدمن");
+        }
     }
+}
 </script>
