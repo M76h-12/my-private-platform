@@ -1,57 +1,13 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <title>Discord Control - Private</title>
-    <style>
-        body { background-color: #36393f; color: white; font-family: sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 72px; background-color: #202225; padding: 12px 0; display: flex; flex-direction: column; align-items: center; }
-        .channels { width: 240px; background-color: #2f3136; padding: 10px; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #40444b; }
-        .input-area { padding: 20px; background-color: #36393f; }
-        input { width: 100%; padding: 12px; border-radius: 5px; border: none; background-color: #40444b; color: white; outline: none; }
-        .admin-panel { display: none; background: #ed4245; padding: 15px; border-top: 2px solid white; }
-        .btn { background: white; color: #ed4245; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-    </style>
-</head>
-<body>
-    <div class="sidebar">🌐</div>
-    <div class="channels"><h3>قنوات السيطرة</h3><p># general</p><p># surveillance</p></div>
-    <div class="chat-area">
-        <div class="messages" id="chatBox">
-            <p style="color: #b9bbbe;">[System]: مرحباً بك في المنصة الخاصة. أدخل إيميل الإدارة للتحكم.</p>
-        </div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="اكتب رسالة أو إيميل الأدمن..." onkeypress="handleInput(event)">
-        </div>
-        <div class="admin-panel" id="adminPanel">
-            <strong>🛠️ لوحة السوبر أدمن:</strong>
-            <button class="btn" onclick="alert('تم تفعيل التجسس...')">Spy Mode 👁️</button>
-            <button class="btn" onclick="alert('تم تجميد الشات...')">Freeze Chat ❄️</button>
-            <span id="ipDisplay" style="float: right; font-size: 12px;">Detecting Targets...</span>
-        </div>
-    </div>
+<script>
+    function activateSpy() {
+        alert("🕵️ جاري سحب بيانات الـ IP والموقع الجغرافي لجميع المتصلين...");
+        document.getElementById('chatBox').innerHTML += `<p style="color: #ed4245;">[SYSTEM]: جاري استخراج البيانات... تم تحديد 3 أهداف نشطة.</p>`;
+    }
 
-    <script>
-        function handleInput(event) {
-            if (event.key === "Enter") {
-                let val = document.getElementById('userInput').value;
-                let chatBox = document.getElementById('chatBox');
-                
-                // إضافة الرسالة للشاشة
-                chatBox.innerHTML += `<p><strong>أنت:</strong> ${val}</p>`;
-                
-                // فحص إذا كان المستخدم هو أنت (الأدمن)
-                if (val === "3mohmm9d76@gmail.com") {
-                    document.getElementById('adminPanel').style.display = "block";
-                    chatBox.innerHTML += `<p style="color: #3ba55c;">✅ تم تفعيل صلاحيات السوبر أدمن!</p>`;
-                }
-                
-                document.getElementById('userInput').value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }
-    </script>
-</body>
-</html>
+    function freezeChat() {
+        let input = document.getElementById('userInput');
+        input.disabled = true;
+        input.placeholder = "⚠️ تم تجميد الشات بواسطة الأدمن";
+        alert("❄️ تم قفل الكتابة لجميع المستخدمين بنجاح.");
+    }
+</script>
