@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#313338] text-[#dbdee1] antialiased overflow-hidden;
+    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+}
+
+/* تخصيص شريط التمرير ليكون مثل ديسكورد تماماً */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2e3338;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1d20;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #111214;
+}
+
+/* تأثيرات الانتقال بين القنوات */
+.channel-transition {
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* تصميم الفيديوهات في حالة الشبكة */
+video {
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #000;
+}
+
+/* انيميشن لظهور الرسائل */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-animate {
+  animation: slideIn 0.3s ease-out forwards;
+}
