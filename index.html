@@ -2,47 +2,76 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Ultimate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Clone - Video Chat</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root {
-            --bg-guilds: #1e1f22; --bg-sidebar: #2b2d31; --bg-chat: #313338;
-            --bg-members: #2b2d31; --text-normal: #dbdee1; --text-muted: #949ba4;
-            --brand: #5865f2; --success: #23a55a; --danger: #f23f43;
+        body { font-family: sans-serif; background: #36393f; color: white; display: flex; flex-direction: column; align-items: center; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; width: 90%; margin-top: 20px; }
+        video { width: 100%; background: #2f3136; border-radius: 8px; transform: scaleX(-1); }
+        .controls { margin-top: 20px; background: #2f3136; padding: 20px; border-radius: 10px; }
+        input { padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; background: #5865f2; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #4752c4; }
+    </style>
+</head>
+<body>
+
+    <h2>مرحباً بك في ديسكورد المصغر 🚀</h2>
+    
+    <div class="controls">
+        <p>معرفك الخاص: <strong id="my-id">... جاري التحميل</strong></p>
+        <input type="text" id="peer-id" placeholder="أدخل معرف صديقك">
+        <button onclick="connectToPeer()">اتصال فيديو</button>
+    </div>
+
+    <div class="video-grid" id="video-grid">
+        <video id="local-video" autoplay muted></video>
+    </div>
+
+    <script>
+        const peer = new Peer(); // إنشاء اتصال جديد
+        const videoGrid = document.getElementById('video-grid');
+        const localVideo = document.getElementById('local-video');
+        let myStream;
+
+        // 1. الحصول على الكاميرا والميكروفون
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            myStream = stream;
+            localVideo.srcObject = stream;
+        });
+
+        // 2. عرض معرفك الخاص (ID) لتعطيه لصديقك
+        peer.on('open', id => {
+            document.getElementById('my-id').innerText = id;
+        });
+
+        // 3. استقبال المكالمات الواردة
+        peer.on('call', call => {
+            call.answer(myStream); // الرد بمقطع الفيديو الخاص بك
+            const video = document.createElement('video');
+            call.on('stream', userVideoStream => {
+                addVideoStream(video, userVideoStream);
+            });
+        });
+
+        // 4. وظيفة الاتصال بصديق
+        function connectToPeer() {
+            const friendId = document.getElementById('peer-id').value;
+            const call = peer.call(friendId, myStream);
+            const video = document.createElement('video');
+            call.on('stream', userVideoStream => {
+                addVideoStream(video, userVideoStream);
+            });
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body, html { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #000; color: white; }
-        .app-shell { display: flex; height: 100vh; width: 100vw; }
 
-        /* شريط السيرفرات */
-        .guilds-nav { width: 72px; background: var(--bg-guilds); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; }
-        .guild-item { width: 48px; height: 48px; background: var(--bg-chat); border-radius: 50%; cursor: pointer; transition: 0.2s; position: relative; display: flex; align-items: center; justify-content: center; }
-        .guild-item:hover, .guild-item.active { border-radius: 30%; background: var(--brand); }
-        .guild-item.active::before { content: ""; position: absolute; left: -12px; height: 40px; width: 4px; background: white; border-radius: 0 4px 4px 0; }
-
-        /* شريط القنوات */
-        .sidebar { width: 240px; background: var(--bg-sidebar); display: flex; flex-direction: column; }
-        .server-header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); cursor: pointer; }
-        .scroller { flex: 1; overflow-y: auto; padding: 12px 0; }
-        .category { padding: 10px 8px 4px 16px; color: var(--text-muted); font-size: 12px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; cursor: pointer; }
-        .chan { padding: 6px 8px; margin: 2px 8px; border-radius: 4px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .chan:hover, .chan.active { background: #3f4147; color: white; }
-        .chan::before { content: "#"; font-size: 20px; color: #72767d; }
-        .chan.voice::before { content: "🔊"; font-size: 16px; }
-
-        /* منطقة الدردشة */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0,0,0,0.2); font-weight: bold; }
-        .messages-list { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg-card { display: flex; gap: 16px; transition: background 0.1s; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
-        .msg-body { display: flex; flex-direction: column; }
-        .msg-user { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-        .msg-user span { color: var(--text-muted); font-size: 11px; font-weight: normal; }
-
-        /* صندوق الإدخال */
-        .input-wrapper { padding: 0 16px 24px; }
-        .input-inner { background: #383a40; padding: 11px; border-radius: 8px; display: flex; align-items: center; gap: 12px; }
-        input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 15px; }
-
-        /* قائمة الأعضاء والتحكم */
-        .members-list
+        function addVideoStream(video, stream) {
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+            });
+            videoGrid.append(video);
+        }
+    </script>
+</body>
+</html>
